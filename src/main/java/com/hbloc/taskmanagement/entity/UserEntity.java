@@ -5,8 +5,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "user")
@@ -80,7 +82,13 @@ public class UserEntity extends BaseEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.getCode()));
+        Set<RolePermissionsEntity> rolePermissions = role.getRolePermissions();
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (RolePermissionsEntity item : rolePermissions) {
+            authorities.add(new SimpleGrantedAuthority(item.getPermission().getCode()));
+        }
+        authorities.add(new SimpleGrantedAuthority(role.getCode()));
+        return authorities;
     }
 
     @Override

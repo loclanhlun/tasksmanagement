@@ -13,9 +13,6 @@ public class StatusEntity extends BaseEntity{
     private String code;
     private String name;
 
-    @OneToMany(mappedBy = "status", cascade = CascadeType.ALL)
-    private List<UserEntity> users;
-
     public String getCode() {
         return code;
     }
@@ -30,13 +27,5 @@ public class StatusEntity extends BaseEntity{
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public List<UserEntity> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<UserEntity> users) {
-        this.users = users;
     }
 }

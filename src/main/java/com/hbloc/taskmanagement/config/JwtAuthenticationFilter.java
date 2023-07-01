@@ -17,7 +17,7 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final String AUTHENTICATION = "Authentication";
+    private static final String AUTHORIZATION = "Authorization";
     private static final String BEARER_KEY = "Bearer ";
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
@@ -32,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
-        final String authHeader = request.getHeader(AUTHENTICATION);
+        final String authHeader = request.getHeader(AUTHORIZATION);
         final String jwt;
         final String userEmail;
 
@@ -40,7 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        jwt = authHeader.substring(BEARER_KEY.length() + 1);
+        jwt = authHeader.substring(BEARER_KEY.length());
         userEmail = jwtService.extractUsername(jwt);
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);

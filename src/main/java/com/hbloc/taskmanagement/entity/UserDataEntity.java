@@ -14,7 +14,7 @@ public class UserDataEntity extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "permission_id")
-    private Permissions permissions;
+    private PermissionEntity permissions;
 
     private Integer parentId;
 
@@ -26,11 +26,11 @@ public class UserDataEntity extends BaseEntity {
         this.user = user;
     }
 
-    public Permissions getPermissions() {
+    public PermissionEntity getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(Permissions permissions) {
+    public void setPermissions(PermissionEntity permissions) {
         this.permissions = permissions;
     }
 

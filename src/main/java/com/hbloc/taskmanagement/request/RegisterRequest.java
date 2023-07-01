@@ -1,5 +1,7 @@
 package com.hbloc.taskmanagement.request;
 
+import java.util.List;
+
 public class RegisterRequest {
     private String firstName;
     private String middleName;
@@ -7,6 +9,7 @@ public class RegisterRequest {
     private String email;
     private String password;
     private Integer role;
+    private List<Integer> permissionsId;
 
     public String getFirstName() {
         return firstName;
@@ -54,5 +57,13 @@ public class RegisterRequest {
 
     public void setRole(Integer role) {
         this.role = role;
+    }
+
+    public List<Integer> getPermissionsId() {
+        return permissionsId;
+    }
+
+    public void setPermissionsId(List<Integer> permissionsId) {
+        this.permissionsId = permissionsId;
     }
 }

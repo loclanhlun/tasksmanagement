@@ -1,18 +1,18 @@
 package com.hbloc.taskmanagement.entity;
 
-import jakarta.persistence.*;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
-import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "roles")
-public class RoleEntity extends BaseEntity {
+@Table(name = "permissions")
+public class PermissionEntity extends BaseEntity{
     private String code;
     private String name;
-
-    @OneToMany(mappedBy = "role", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "permission", fetch = FetchType.EAGER)
     private Set<RolePermissionsEntity> rolePermissions;
 
     public String getCode() {
