@@ -5,6 +5,6 @@ import com.hbloc.taskmanagement.request.RegisterRequest;
 import com.hbloc.taskmanagement.response.AuthenticationResponse;
 
 public interface IAuthenticationService {
-    AuthenticationResponse register(RegisterRequest request);
+    AuthenticationResponse register(RegisterRequest request) throws Throwable;
     AuthenticationResponse authenticate(AuthenticateRequest request);
 }

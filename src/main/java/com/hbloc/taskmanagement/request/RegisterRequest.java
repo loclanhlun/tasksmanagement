@@ -1,15 +1,30 @@
 package com.hbloc.taskmanagement.request;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.List;
 
 public class RegisterRequest {
+    @NotBlank(message = "First name is mandatory")
     private String firstName;
+    @NotBlank(message = "Middle name is mandatory")
     private String middleName;
+    @NotBlank(message = "Last name is mandatory")
     private String lastName;
+    @NotBlank(message = "Email name is mandatory")
+    @Email(regexp = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}")
     private String email;
+    @NotBlank(message = "Password name is mandatory")
     private String password;
-    private Integer role;
-    private List<Integer> permissionsId;
+    @NotBlank(message = "Confirm password is mandatory")
+    private String confirmPassword;
+    @NotBlank(message = "Role is mandatory")
+    private String roleCode;
+    @NotEmpty(message = "Permissions may not empty")
+    private List<String> permissionsCode;
 
     public String getFirstName() {
         return firstName;
@@ -51,19 +66,27 @@ public class RegisterRequest {
         this.password = password;
     }
 
-    public Integer getRole() {
-        return role;
+    public String getConfirmPassword() {
+        return confirmPassword;
     }
 
-    public void setRole(Integer role) {
-        this.role = role;
+    public void setConfirmPassword(String confirmPassword) {
+        this.confirmPassword = confirmPassword;
     }
 
-    public List<Integer> getPermissionsId() {
-        return permissionsId;
+    public String getRoleCode() {
+        return roleCode;
     }
 
-    public void setPermissionsId(List<Integer> permissionsId) {
-        this.permissionsId = permissionsId;
+    public void setRoleCode(String roleCode) {
+        this.roleCode = roleCode;
+    }
+
+    public List<String> getPermissionsCode() {
+        return permissionsCode;
+    }
+
+    public void setPermissionsCode(List<String> permissionsCode) {
+        this.permissionsCode = permissionsCode;
     }
 }

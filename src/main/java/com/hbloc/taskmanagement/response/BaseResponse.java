@@ -1,8 +1,10 @@
 package com.hbloc.taskmanagement.response;
 
+import java.util.List;
+
 public class BaseResponse {
     private String resultCode;
-    private String resultDescription;
+    private Object resultDescription;
 
     public String getResultCode() {
         return resultCode;
@@ -12,11 +14,11 @@ public class BaseResponse {
         this.resultCode = resultCode;
     }
 
-    public String getResultDescription() {
+    public Object getResultDescription() {
         return resultDescription;
     }
 
-    public void setResultDescription(String resultDescription) {
+    public void setResultDescription(Object resultDescription) {
         this.resultDescription = resultDescription;
     }
 }

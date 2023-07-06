@@ -2,10 +2,12 @@ package com.hbloc.taskmanagement.service.impl;
 
 import com.hbloc.taskmanagement.config.JwtService;
 import com.hbloc.taskmanagement.entity.*;
+import com.hbloc.taskmanagement.enums.StatusEnum;
 import com.hbloc.taskmanagement.repositories.*;
 import com.hbloc.taskmanagement.request.AuthenticateRequest;
 import com.hbloc.taskmanagement.request.RegisterRequest;
 import com.hbloc.taskmanagement.response.AuthenticationResponse;
+import com.hbloc.taskmanagement.response.BaseResponse;
 import com.hbloc.taskmanagement.service.IAuthenticationService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,9 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 @Service
 public class AuthenticationService implements IAuthenticationService {
@@ -29,7 +31,14 @@ public class AuthenticationService implements IAuthenticationService {
     private final AuthenticationManager authenticationManager;
 
 
-    public AuthenticationService(UserRepository userRepository, RoleRepository roleRepository, StatusRepository statusRepository, RolePermissionRepository rolePermissionRepository, PermissionRepository permissionRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager) {
+    public AuthenticationService(UserRepository userRepository,
+                                 RoleRepository roleRepository,
+                                 StatusRepository statusRepository,
+                                 RolePermissionRepository rolePermissionRepository,
+                                 PermissionRepository permissionRepository,
+                                 PasswordEncoder passwordEncoder,
+                                 JwtService jwtService,
+                                 AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.statusRepository = statusRepository;
@@ -41,61 +50,107 @@ public class AuthenticationService implements IAuthenticationService {
     }
 
     @Override
-    public AuthenticationResponse register(RegisterRequest request) {
-        AuthenticationResponse response = new AuthenticationResponse();
+    public AuthenticationResponse register(RegisterRequest request) throws Throwable {
+        validateExistEmail(request);
+
         UserEntity user = new UserEntity();
+        user.setEmail(request.getEmail());
         user.setFirstName(request.getFirstName());
         user.setMiddleName(request.getMiddleName());
         user.setLastName(request.getLastName());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setEmail(request.getEmail());
 
-        StatusEntity status = getStatus(1);
+        validatePasswordAndConfirmPassword(request.getPassword(), request.getConfirmPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        StatusEntity status = getStatus(StatusEnum.ACTIVE.getValue());
         user.setStatus(status);
 
+        RoleEntity role = getRole(request.getRoleCode());
+        Set<RolePermissionsEntity> permissionEntitySet = getRolePermission(request, role);
+        role.setRolePermissions(permissionEntitySet);
 
-
-        RoleEntity roleEntity = getRole(request.getRole());
-
-
-        Set<RolePermissionsEntity> permissionEntitySet = new HashSet<>();
-        for(Integer permissionId : request.getPermissionsId()) {
-            Optional<PermissionEntity> permission =
-                    Optional.of(permissionRepository.findById(permissionId).orElseThrow());
-            RolePermissionsEntity rolePermissions = new RolePermissionsEntity();
-            rolePermissions.setPermission(permission.get());
-            rolePermissions.setRole(roleEntity);
-            rolePermissionRepository.save(rolePermissions);
-            permissionEntitySet.add(rolePermissions);
-        }
-
-        roleEntity.setRolePermissions(permissionEntitySet);
-        user.setRole(roleEntity);
+        user.setRole(role);
         userRepository.save(user);
-        String jwtToken = jwtService.generateToken(user);
-        response.setResultCode("0");
-        response.setResultDescription("Success");
-        response.setToken(jwtToken);
+
+        AuthenticationResponse response = buildSuccessResponse(user);
         return response;
     }
 
-    private RoleEntity getRole(Integer roleId) {
-        Optional<RoleEntity> roleEntity = Optional.of(roleRepository.findById(roleId).orElseThrow());
+    private RoleEntity getRole(String roleCode) throws Throwable {
+        Optional<RoleEntity> roleEntity =
+                Optional.of(
+                        roleRepository.findByCode(roleCode)
+                                .orElseThrow(
+                                        (Supplier<Throwable>) () -> new Exception("Role not found!")
+                                )
+                );
         return roleEntity.get();
     }
 
-    private StatusEntity getStatus(Integer statusId) {
-        Optional<StatusEntity> status = Optional.of(statusRepository.findById(statusId).orElseThrow());
+    private StatusEntity getStatus(Integer statusId) throws Throwable {
+        Optional<StatusEntity> status =
+                Optional.of(
+                        statusRepository.findById(statusId)
+                                .orElseThrow(
+                                        (Supplier<Throwable>) () -> new Exception("Status not found!")
+                                )
+                );
+
         return status.get();
     }
 
     @Override
     public AuthenticationResponse authenticate(AuthenticateRequest request) {
-        AuthenticationResponse response = new AuthenticationResponse();
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         Optional<UserEntity> user = Optional.of(userRepository.findByEmail(request.getEmail()).orElseThrow());
+        AuthenticationResponse response = buildSuccessResponse(user.get());
+        return response;
+    }
 
-        String jwtToken = jwtService.generateToken(user.get());
+    private boolean isEqual(String password, String confirmPassword) {
+        return password.equals(confirmPassword);
+    }
+
+    private void validatePasswordAndConfirmPassword(String password, String confirmPassword) throws Exception {
+        if (!isEqual(password, confirmPassword)) {
+            throw new Exception("Confirm password is not match");
+        }
+    }
+
+    private void validateExistEmail(RegisterRequest request) throws Exception {
+        Optional<UserEntity> oldUser = userRepository.findByEmail(request.getEmail());
+        if (oldUser.get() != null) {
+            throw new Exception("Email is already exists!");
+        }
+    }
+
+    private Set<RolePermissionsEntity> getRolePermission(RegisterRequest request, RoleEntity role) throws Throwable {
+        Set<RolePermissionsEntity> permissionEntitySet = new HashSet<>();
+        for (String permissionCode : request.getPermissionsCode()) {
+            PermissionEntity permission = getPermission(permissionCode);
+            RolePermissionsEntity rolePermissions = new RolePermissionsEntity();
+            rolePermissions.setPermission(permission);
+            rolePermissions.setRole(role);
+            rolePermissionRepository.save(rolePermissions);
+            permissionEntitySet.add(rolePermissions);
+        }
+        return permissionEntitySet;
+    }
+
+    private PermissionEntity getPermission(String permissionCode) throws Throwable {
+        Optional<PermissionEntity> permission =
+                Optional.of(
+                        permissionRepository.findByCode(permissionCode)
+                                .orElseThrow(
+                                        (Supplier<Throwable>) () -> new Exception("Permission not found!")
+                                )
+                );
+        return permission.get();
+    }
+
+    private AuthenticationResponse buildSuccessResponse(UserEntity user) {
+        AuthenticationResponse response = new AuthenticationResponse();
+        String jwtToken = jwtService.generateToken(user);
         response.setResultCode("0");
         response.setResultDescription("Success");
         response.setToken(jwtToken);
