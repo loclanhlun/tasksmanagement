@@ -38,7 +38,7 @@ public class AuthenticationController extends BaseController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody AuthenticateRequest request) {
+    public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody AuthenticateRequest request) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }
  }
